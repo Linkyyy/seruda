@@ -21,6 +21,16 @@ export class Renderer {
     this.layer.height = H;
     this.c = this.layer.getContext('2d', { alpha: false });
     this.c.imageSmoothingEnabled = false;
+    this.width = W;
+  }
+
+  resize(width = W) {
+    const next = Math.max(320, Math.min(W, Math.round(width / 2) * 2));
+    if (this.width === next) return;
+    this.width = next;
+    this.canvas.width = next;
+    this.canvas.height = H;
+    this.ctx.imageSmoothingEnabled = false;
   }
 
   rect(x, y, w, h, color) {
@@ -90,7 +100,7 @@ export class Renderer {
     // Tiny consistent scan lines evoke a handheld screen without obscuring detail.
     c.fillStyle = '#10251c07';
     for (let y = 1; y < H; y += 3) c.fillRect(0, y, W, 1);
-    this.ctx.drawImage(this.layer, 0, 0);
+    this.ctx.drawImage(this.layer, 0, 0, this.width, H, 0, 0, this.width, H);
   }
 
   landscape() {

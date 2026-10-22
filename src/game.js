@@ -49,6 +49,7 @@ export class Game {
     this.state = freshState();
     this.player = freshPlayer();
     this.camera = { x: 0, y: 0 };
+    this.viewportWidth = 960;
     this.keys = new Set();
     this.effects = [];
     this.projectiles = [];
@@ -158,6 +159,19 @@ export class Game {
 
   togglePause() { return this.pause(!this.state.paused); }
 
+  setViewport(width = 960) {
+    if (!Number.isFinite(width)) return;
+    const next = clamp(Math.round(width / 2) * 2, 320, 960);
+    if (next === this.viewportWidth) return;
+    this.viewportWidth = next;
+    this.renderer.resize?.(next);
+    if (this.map) this.camera.x = this._cameraTarget();
+  }
+
+  _cameraTarget() {
+    return clamp(this.player.x - this.viewportWidth * 0.35, 0, Math.max(0, this.map.width - this.viewportWidth));
+  }
+
   setInput(key, pressed) {
     const normalized = normalizeKey(key);
     const wasPressed = this.keys.has(normalized);
@@ -251,7 +265,7 @@ export class Game {
     }
     const spawn = options.spawn || this.map.spawn || { x: 100, y: this.map.groundY - 50 };
     this._positionPlayer(spawn);
-    this.camera.x = clamp(this.player.x - 320, 0, Math.max(0, this.map.width - 960));
+    this.camera.x = this._cameraTarget();
     this.projectiles.length = 0;
     this.effects.length = 0;
     this.runeCooldown = 0;
@@ -733,7 +747,7 @@ export class Game {
       if (effect.vx !== undefined) { effect.x += effect.vx * dt; effect.y += effect.vy * dt; effect.vy += 180 * dt; }
     }
     this.effects = this.effects.filter((e) => e.life > 0);
-    this.camera.x += (clamp(p.x - 340, 0, Math.max(0, this.map.width - 960)) - this.camera.x) * Math.min(1, dt * 5);
+    this.camera.x += (this._cameraTarget() - this.camera.x) * Math.min(1, dt * 5);
     this.interaction = this._getInteraction();
     this.saveClock += dt;
     if (this.saveClock > 8) { this.saveClock = 0; this.save(); }
@@ -873,7 +887,7 @@ export class Game {
     this._positionPlayer(spawn || { x: 100, y: 390 });
     this.player.invuln = 2.5;
     this.projectiles.length = 0;
-    this.camera.x = clamp(this.player.x - 320, 0, this.map.width - 960);
+    this.camera.x = this._cameraTarget();
     this._toast('旅人，再次醒来。灵光与行囊都在，勇气也仍在。', 'warning');
     this.save();
     return true;
@@ -930,6 +944,7 @@ export class Game {
       gameWon: this.state.gameWon, playTime: this.state.playTime, hasSave: Boolean(this.hasSave),
       boss: boss && !boss.dormant ? { hp: boss.hp, maxHp: boss.maxHp, name: boss.name } : null,
       x: p.x, worldWidth: this.map?.width || 3200,
+      viewportWidth: this.viewportWidth,
     };
   }
 

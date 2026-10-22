@@ -49,6 +49,34 @@ test('gravity, collision and movement operate in the real simulation', t => {
   assert.ok(game.player.y + game.player.h <= game.map.groundY + 1, 'movement may not fall through floor');
 });
 
+test('portrait cameras follow the player and clamp correctly at both map and shrine edges', t => {
+  const {game} = makeGame(t);
+  const widths = [];
+  game.renderer.resize = width => widths.push(width);
+  game.setViewport(390);
+  assert.equal(game.viewportWidth,390);
+  assert.deepEqual(widths,[390]);
+  game.enemies = [];
+  game.player.x = 1600;
+  advance(game,1);
+  const playerOnScreen = game.player.x-game.camera.x;
+  assert.ok(playerOnScreen>80 && playerOnScreen<220,'narrow screens must follow the player instead of retaining a desktop camera');
+  game.enterMap('map-01',{spawn:{x:3100,y:390},silent:true});
+  assert.equal(game.camera.x,2810,'right edge must use the narrow viewport, revealing the full map');
+  assert.ok(game.player.x-game.camera.x<390);
+  game.enterShrine('shrine-01');
+  assert.equal(game.camera.x,0);
+  game.player.x=1450;
+  game.setViewport(360);
+  assert.equal(game.camera.x,1240,'shrine right edge must also be visible');
+  game.setViewport(960);
+  assert.equal(game.camera.x,640);
+  game.setViewport(Number.NaN);
+  assert.equal(game.viewportWidth,960);
+  game.setViewport(100);
+  assert.equal(game.viewportWidth,320);
+});
+
 test('fast travel requires discovery and map exits discover neighboring regions', t => {
   const { game } = makeGame(t);
   const initial = game.state.mapId;

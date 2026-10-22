@@ -1,6 +1,7 @@
 import { Game } from './game.js';
 import { MAPS, SHRINES } from './world.js';
 import { AudioManager } from './audio.js';
+import { TouchControls } from './touch.js';
 
 const $ = id => document.getElementById(id);
 const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -22,7 +23,9 @@ const fieldNotes = [
   '每一座神庙都有自己的秘密。<br>读懂石碑，让符文回应机关。',
 ];
 const canvas = $('gameCanvas');
-document.body.classList.toggle('touch-device', navigator.maxTouchPoints > 0 || matchMedia('(pointer:coarse)').matches);
+const touchDevice = navigator.maxTouchPoints > 0 || matchMedia('(pointer:coarse)').matches;
+document.body.classList.toggle('touch-device', touchDevice);
+const compactTouch = () => touchDevice && (innerWidth <= 1024 || innerHeight <= 600);
 const audio = new AudioManager();
 let game;
 let snapshot = {};
@@ -31,6 +34,53 @@ let pausedBeforeDialog = false;
 let lastRegion = '';
 let toastHistory = new Map();
 let saveAnimation;
+let touchControls;
+let viewportFrame;
+let scrollBeforePlay = 0;
+
+function mobileInstructions(value) {
+  if (!touchDevice) return value;
+  return String(value)
+    .replace(/C\s+烹饪\s*·\s*E\s+营火休憩/g, '点“烹饪”制作料理 · 点“交互”休憩')
+    .replace(/按\s*R\s*切换/g, '点“切换符文”').replace(/R\s*切换符文/g, '切换符文')
+    .replace(/F\s*(施放|释放)/g, '点“符文”$1').replace(/按\s*F/g, '点“符文”').replace(/按\s*E/g, '点“交互”').replace(/\bE\s+/g, '点“交互”').replace(/\bE\b/g, '交互')
+    .replace(/按\s*C/g, '点“烹饪”').replace(/\bC\b/g, '烹饪').replace(/\bQ\b/g, '食用')
+    .replace(/按\s*M/g, '打开地图').replace(/按\s*K\s*(射箭)?/g, '点“射箭”').replace(/按\s*J/g, '点“攻击”')
+    .replace(/按\s*W/g, '按住“攀爬”').replace(/按\s*Shift/gi, '按住“冲刺”')
+    .replace(/空格/g, '“跳跃”').replace(/A\s*\/\s*D/g, '左右按钮');
+}
+
+function resizeViewport() {
+  cancelAnimationFrame(viewportFrame);
+  viewportFrame = requestAnimationFrame(() => {
+    const size = canvas.getBoundingClientRect();
+    if (game && size.height > 0) game.setViewport(touchDevice ? 540 * size.width / size.height : 960);
+  });
+}
+
+function syncWindowSize() {
+  touchControls?.releaseAll();
+  document.documentElement.style.setProperty('--app-height', `${Math.round(window.visualViewport?.height || innerHeight)}px`);
+  resizeViewport();
+}
+
+function setPlayMode(enabled) {
+  if (!touchDevice) return;
+  const wasEnabled = document.body.classList.contains('play-mode');
+  if (enabled && !wasEnabled) scrollBeforePlay = scrollY;
+  touchControls?.releaseAll();
+  document.body.classList.toggle('play-mode', enabled);
+  document.querySelectorAll('.app-header, .intro-row, .adventure-panels, .page-footer').forEach(node => { node.inert = enabled; });
+  $('fullscreenButton').setAttribute('aria-pressed', String(enabled));
+  $('fullscreenButton').setAttribute('aria-label', enabled ? '退出沉浸模式' : '进入沉浸模式');
+  $('fullscreenButton').title = enabled ? '退出沉浸模式' : '进入沉浸模式';
+  $('fullscreenButton').querySelector('use').setAttribute('href', enabled ? '#i-collapse' : '#i-expand');
+  if (!enabled && wasEnabled) {
+    if (game?.started) game.pause(true);
+    requestAnimationFrame(() => window.scrollTo({top:scrollBeforePlay, behavior:'instant'}));
+  }
+  syncWindowSize();
+}
 
 function toast(text, kind = 'info') {
   if (!text) return;
@@ -39,9 +89,9 @@ function toast(text, kind = 'info') {
   toastHistory.set(text, now);
   const node = document.createElement('div');
   node.className = `toast ${kind}`;
-  node.textContent = text;
+  node.textContent = mobileInstructions(text);
   $('toastStack').append(node);
-  while ($('toastStack').children.length > 3) $('toastStack').firstChild.remove();
+  while ($('toastStack').children.length > (touchDevice ? 2 : 3)) $('toastStack').firstChild.remove();
   setTimeout(() => { node.classList.add('removing'); setTimeout(() => node.remove(), 350); }, 3600);
 }
 
@@ -65,6 +115,10 @@ function updateSnapshot(next) {
   $('staminaBar').style.width = `${energy}%`;
   $('staminaBar').style.background = energy < 25 ? '#e8aa69' : '#c8e58e';
   $('arrowCount').textContent = next.arrows ?? 20;
+  $('touchArrowCount').textContent = next.arrows ?? 20;
+  $('touchFoodCount').textContent = next.inventory?.food ? `料理 × ${next.inventory.food}` : `苹果 × ${next.inventory?.apple || 0}`;
+  $('touchCookButton').disabled = !next.canCook;
+  $('touchCookButton').querySelector('small').textContent = next.canCook ? '烹饪 / 制箭' : '靠近营火';
   const bossVisible = Boolean(next.started && next.boss && !next.shrineId && next.x > 1900);
   $('bossHud').classList.toggle('hidden', !bossVisible);
   if (bossVisible) {
@@ -76,15 +130,20 @@ function updateSnapshot(next) {
   $('shrineCount').textContent = completed;
   $('questProgress').style.width = `${completed / 15 * 100}%`;
   $('questTitle').textContent = next.gameWon ? '风记得每一位旅人' : completed === 15 ? '最后的黎明' : completed > 0 ? '收集风的十五道回响' : '唤醒沉睡的旷野';
-  $('questText').textContent = next.quest || '循着青色的光，寻找第一座古代神庙。';
+  $('questText').textContent = mobileInstructions(next.quest || '循着青色的光，寻找第一座古代神庙。');
   const rune = runes.find(r => r.id === next.rune) || runes[0];
   $('runeSymbol').textContent = rune.symbol;
   $('runeName').textContent = rune.full;
+  $('touchRuneSymbol').textContent = rune.symbol;
+  $('touchRuneName').textContent = rune.name;
+  $('touchControls').querySelector('[data-action="cycleRune"]').setAttribute('aria-label', `切换符文，当前${rune.name}`);
   const totalMinutes = 360 + Math.floor((next.playTime || 0) / 2);
   const hour = String(Math.floor(totalMinutes / 60) % 24).padStart(2, '0');
   const minute = String(totalMinutes % 60).padStart(2, '0');
   $('weatherLabel').textContent = `${next.shrineId ? '遗迹' : weatherNames[next.weather] || '晴'} · ${hour}:${minute}`;
   const active = Boolean(next.started);
+  document.body.classList.toggle('game-started', active);
+  if (next.paused) touchControls?.releaseAll();
   $('startScreen').classList.toggle('hidden', active);
   $('runeHud').classList.toggle('hidden', !active);
   $('pauseScreen').classList.toggle('hidden', !active || !next.paused || Boolean(currentDialog));
@@ -92,8 +151,8 @@ function updateSnapshot(next) {
   $('interactionPrompt').classList.toggle('hidden', !showInteraction);
   if (showInteraction) {
     const match = next.interaction.match(/^([ECRF])\s+/i);
-    $('interactionPrompt').querySelector('kbd').textContent = match ? match[1] : '✦';
-    $('interactionPrompt').querySelector('span').textContent = match ? next.interaction.slice(match[0].length) : next.interaction;
+    $('interactionPrompt').querySelector('kbd').textContent = touchDevice ? '提示' : match ? match[1] : '✦';
+    $('interactionPrompt').querySelector('span').textContent = mobileInstructions(touchDevice ? next.interaction : match ? next.interaction.slice(match[0].length) : next.interaction);
   }
   $('pauseButton').setAttribute('aria-label', next.paused ? '继续游戏' : '暂停游戏');
   $('pauseButton').title = next.paused ? '继续游戏' : '暂停游戏';
@@ -153,6 +212,7 @@ function act(action) {
 function startAdventure() {
   if (!game) return;
   audio.unlock();
+  if (compactTouch()) setPlayMode(true);
   game.start();
   game.pause(false);
   updateSnapshot(game.getSnapshot());
@@ -170,6 +230,7 @@ function showDialog(type, title, eyebrow, html) {
   $('dialogEyebrow').textContent = eyebrow;
   $('dialogContent').innerHTML = html;
   if (!$('gameDialog').open) $('gameDialog').showModal();
+  $('gameDialog').scrollTop = 0;
   updateSnapshot(game.getSnapshot());
   audio.play('menu');
 }
@@ -229,7 +290,8 @@ function showHelp() {
     ['营火烹饪',['C'], '消耗 2 个苹果'],['世界地图 / 行囊',['M','I'], '暂停时也可查看'],
     ['暂停 / 继续',['ESC'], '冒险自动保存'],['冒险指南',['H'], '随时重温'],
   ];
-  showDialog('help', '风野生存手册', 'A GUIDE FOR THE CURIOUS', `<p class="help-intro">你可以随心探索。向东穿过十张地图，在青色神庙前按 E 进入，读懂石碑，用对应符文唤醒机关，再前往最右侧祭坛领取灵珠。</p><div class="help-grid">${controls.map(([label,keys,note]) => `<div class="help-row"><span>${label} <small>${note}</small></span><div>${keys.map(k => `<kbd>${k}</kbd>`).join('')}</div></div>`).join('')}</div><div class="guide-blocks"><div class="guide-block"><h3>让身体追上风</h3><p>跳跃后再次按空格展开滑翔翼。靠近树木或墙壁按 W 攀爬，按 Shift 冲刺。绿色体力会在地面自动恢复。</p></div><div class="guide-block"><h3>让符文回应世界</h3><p>风托起你，磁力移动金属，静滞停止时间，爆弹炸开裂岩，火焰点亮灯火。切换符文后，靠近机关按 F。</p></div><div class="guide-block"><h3>让旅途留下回响</h3><p>拾取苹果、木材与矿石，搜寻宝箱，在营火旁烹饪。神庙永久记录进度，倒下后在营地重生。十五枚灵珠将唤醒终局。</p></div></div><div class="dialog-footer">移动设备可使用画面中的触控按键。进度保存在此浏览器；离开或刷新后可继续。符文也可以在行囊中直接装备。</div>`);
+  const touchGuide = touchDevice ? '<div class="mobile-help"><h3>双手就能出发</h3><p>左侧左右移动，按住攀爬或冲刺；右侧跳跃、挥剑、射箭、交互和释放符文。可同时按住移动与动作，长按攻击或射箭连续出招。空中再点一次跳跃即可滑翔。</p><p>下方点击符文名字快速切换，点击食用恢复生命，靠近营火后点击烹饪。顶部可打开地图、行囊和暂停；点右上角收起图标退出沉浸模式。竖屏与横屏都能游玩。</p></div>' : '';
+  showDialog('help', '风野生存手册', 'A GUIDE FOR THE CURIOUS', `<p class="help-intro">${mobileInstructions('你可以随心探索。向东穿过十张地图，在青色神庙前按 E 进入，读懂石碑，用对应符文唤醒机关，再前往最右侧祭坛领取灵珠。')}</p>${touchGuide}<div class="help-grid">${controls.map(([label,keys,note]) => `<div class="help-row"><span>${label} <small>${note}</small></span><div>${keys.map(k => `<kbd>${k}</kbd>`).join('')}</div></div>`).join('')}</div><div class="guide-blocks"><div class="guide-block"><h3>让身体追上风</h3><p>${mobileInstructions('跳跃后再次按空格展开滑翔翼。靠近树木或墙壁按 W 攀爬，按 Shift 冲刺。绿色体力会在地面自动恢复。')}</p></div><div class="guide-block"><h3>让符文回应世界</h3><p>${mobileInstructions('风托起你，磁力移动金属，静滞停止时间，爆弹炸开裂岩，火焰点亮灯火。切换符文后，靠近机关按 F。')}</p></div><div class="guide-block"><h3>让旅途留下回响</h3><p>拾取苹果、木材与矿石，搜寻宝箱，在营火旁烹饪。神庙永久记录进度，倒下后在营地重生。十五枚灵珠将唤醒终局。</p></div></div><div class="dialog-footer">进度保存在此浏览器；离开或刷新后可继续。符文也可以在行囊中直接装备。</div>`);
 }
 
 function showBag() {
@@ -275,6 +337,7 @@ $('helpButton').addEventListener('click', showHelp);
 $('allControlsButton').addEventListener('click', showHelp);
 $('mapButton').addEventListener('click', showMap);
 $('bagButton').addEventListener('click', showBag);
+$('mobileBagButton').addEventListener('click', showBag);
 $('orbSlot').addEventListener('click', showMap);
 $('foodSlot').addEventListener('click', () => act('eat'));
 $('swordSlot').addEventListener('click', () => { act('attack'); canvas.focus({preventScroll:true}); });
@@ -285,7 +348,7 @@ $('pauseButton').addEventListener('click', () => {
   if (!snapshot.started) return;
   game.togglePause(); updateSnapshot(game.getSnapshot());
 });
-$('resumeButton').addEventListener('click', () => { game.pause(false); updateSnapshot(game.getSnapshot()); canvas.focus({preventScroll:true}); });
+$('resumeButton').addEventListener('click', () => { if (compactTouch()) setPlayMode(true); game.pause(false); updateSnapshot(game.getSnapshot()); canvas.focus({preventScroll:true}); });
 $('audioButton').addEventListener('click', async () => {
   const enabled = !audio.enabled;
   audio.setEnabled(enabled);
@@ -296,6 +359,12 @@ $('audioButton').addEventListener('click', async () => {
   if (enabled && !available) { audio.setEnabled(false); toast('此浏览器暂不支持声音，仍可继续冒险。'); }
 });
 $('fullscreenButton').addEventListener('click', async () => {
+  if (touchDevice) {
+    const enabled = !document.body.classList.contains('play-mode');
+    setPlayMode(enabled);
+    if (enabled && snapshot.started) { game.pause(false); updateSnapshot(game.getSnapshot()); }
+    return;
+  }
   try {
     if (document.fullscreenElement) await document.exitFullscreen();
     else if ($('gameStage').requestFullscreen) await $('gameStage').requestFullscreen();
@@ -318,20 +387,20 @@ document.addEventListener('keydown', event => {
   if (code === 'Escape' && snapshot.started) { event.preventDefault(); game.togglePause(); updateSnapshot(game.getSnapshot()); }
 });
 
-document.querySelectorAll('[data-key]').forEach(button => {
-  const key = button.dataset.key;
-  button.addEventListener('pointerdown', event => {
-    event.preventDefault();
-    if (!snapshot.started) startAdventure();
-    button.setPointerCapture(event.pointerId);
-    game?.setInput(key, true);
-  });
-  const release = event => { event.preventDefault(); game?.setInput(key,false); };
-  button.addEventListener('pointerup', release);
-  button.addEventListener('pointercancel', release);
-  button.addEventListener('lostpointercapture', () => game?.setInput(key,false));
+touchControls = new TouchControls($('touchControls'), {
+  onKey: (key, pressed) => game?.setInput(key, pressed),
+  onAction: action => act(action),
+  beforePress: () => { if (!snapshot.started) startAdventure(); },
+  canPlay: () => Boolean(game && snapshot.started && !snapshot.paused && !currentDialog),
 });
-document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('pointerdown', event => { event.preventDefault(); act(button.dataset.action); }));
+new ResizeObserver(resizeViewport).observe(canvas);
+window.addEventListener('resize', syncWindowSize);
+window.visualViewport?.addEventListener('resize', syncWindowSize);
+window.addEventListener('orientationchange', syncWindowSize);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && game?.started) { game.pause(true); game.save(); }
+});
+syncWindowSize();
 canvas.addEventListener('pointerdown', () => { if (snapshot.started) canvas.focus({preventScroll:true}); });
 window.addEventListener('blur', () => { if (snapshot.started && !snapshot.paused && !currentDialog) { game.pause(true); updateSnapshot(game.getSnapshot()); } });
 window.addEventListener('beforeunload', () => game?.save());

@@ -2,12 +2,13 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#172d25" />
   <meta name="description" content="风野纪行：一场关于风、遗迹与自由的像素冒险。探索十片原野，解开十五座神庙，自由攀爬、滑翔、战斗与烹饪。" />
   <title>风野纪行 WINDWARD — 像素旷野冒险</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231d382c'/%3E%3Cpath d='m16 4 4 9 8 3-8 3-4 9-4-9-8-3 8-3z' fill='%23d1dba9'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/mobile.css" />
 </head>
 <body>
   <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -22,6 +23,7 @@
     <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M20 3C8 1 1 8 6 16s17 2 14-13ZM4 21 16 8M9 16v-6M9 16h6"/></symbol>
     <symbol id="i-cross" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
     <symbol id="i-expand" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/></symbol>
+    <symbol id="i-collapse" viewBox="0 0 24 24"><path d="M3 8h5V3M16 3v5h5M8 21v-5H3M21 16h-5v5"/></symbol>
     <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
     <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1 1M18 18l1 1M5 19l1-1M18 6l1-1"/></symbol>
     <symbol id="i-save" viewBox="0 0 24 24"><path d="m4 4 12 0 4 4v12H4V4ZM8 4v6h8V4M8 20v-6h8v6"/></symbol>
@@ -44,7 +46,7 @@
     </section>
 
     <section class="game-card" aria-label="风野纪行游戏">
-      <div class="game-toolbar"><div class="region-label"><span class="region-dot"></span><span id="regionLabel">晨风原野</span><span class="region-tag" id="regionTag">THE ADVENTURE BEGINS</span></div><div class="game-toolbar-actions"><button id="mapButton" class="toolbar-button"><svg><use href="#i-map"/></svg>世界地图 <kbd>M</kbd></button><span class="toolbar-divider"></span><button class="icon-button" id="pauseButton" title="暂停游戏" aria-label="暂停游戏"><svg><use href="#i-pause"/></svg></button><button class="icon-button" id="fullscreenButton" title="全屏游戏" aria-label="全屏游戏"><svg><use href="#i-expand"/></svg></button></div></div>
+      <div class="game-toolbar"><div class="region-label"><span class="region-dot"></span><span id="regionLabel">晨风原野</span><span class="region-tag" id="regionTag">THE ADVENTURE BEGINS</span></div><div class="game-toolbar-actions"><button id="mapButton" class="toolbar-button" aria-label="打开世界地图"><svg><use href="#i-map"/></svg><span class="toolbar-text">世界地图</span><kbd>M</kbd></button><button id="mobileBagButton" class="icon-button mobile-bag-button" title="打开行囊" aria-label="打开行囊"><svg><use href="#i-bag"/></svg></button><span class="toolbar-divider"></span><button class="icon-button" id="pauseButton" title="暂停游戏" aria-label="暂停游戏"><svg><use href="#i-pause"/></svg></button><button class="icon-button" id="fullscreenButton" title="全屏游戏" aria-label="全屏游戏"><svg><use href="#i-expand"/></svg></button></div></div>
       <div class="stage-wrap" id="gameStage">
         <canvas id="gameCanvas" width="960" height="540" tabindex="0" aria-label="像素横版开放世界，使用方向键移动，空格跳跃，J攻击，E交互"></canvas>
         <div class="stage-vignette"></div>
@@ -56,7 +58,27 @@
         <div class="location-reveal" id="locationReveal"></div>
         <div class="pause-screen hidden" id="pauseScreen"><span class="eyebrow">TAKE A BREATH</span><h2>让风，歇一会儿。</h2><p>你的冒险已自动保存。</p><button class="primary-button" id="resumeButton">继续冒险 <svg><use href="#i-arrow"/></svg></button></div>
         <div class="toast-stack" id="toastStack" aria-live="polite"></div>
-        <div class="touch-controls" id="touchControls"><div class="touch-dpad"><button data-key="ArrowLeft" aria-label="向左">◀</button><button data-key="ArrowUp" aria-label="攀爬">▲</button><button data-key="ArrowRight" aria-label="向右">▶</button></div><div class="touch-actions"><button data-action="attack">剑</button><button data-action="useRune">符</button><button data-action="interact">E</button><button data-key="Space">跳</button></div></div>
+        <div class="touch-controls" id="touchControls" role="group" aria-label="触屏游戏控制">
+          <div class="touch-utility">
+            <button class="touch-rune-selector" data-action="cycleRune" aria-label="切换符文"><span id="touchRuneSymbol">≋</span><span><b id="touchRuneName">疾风</b><small>切换符文</small></span></button>
+            <button data-action="eat" aria-label="食用料理或苹果"><span>♨</span><span><b>食用</b><small id="touchFoodCount">料理 × 2</small></span></button>
+            <button data-action="cook" id="touchCookButton" aria-label="在营火烹饪或制箭" disabled><span>♧</span><span><b>烹饪</b><small>靠近营火</small></span></button>
+          </div>
+          <div class="touch-main-controls">
+            <div class="touch-movement">
+              <button class="touch-climb" data-key="ArrowUp" aria-label="按住攀爬"><span>▲</span><small>攀爬</small></button>
+              <div class="touch-dpad"><button data-key="ArrowLeft" aria-label="向左移动">◀</button><button class="touch-sprint" data-key="ShiftLeft" aria-label="按住冲刺"><span>»</span><small>冲刺</small></button><button data-key="ArrowRight" aria-label="向右移动">▶</button></div>
+            </div>
+            <div class="touch-actions">
+              <button class="touch-bow" data-action="shoot" data-repeat="370" aria-label="射箭，长按连射"><span>➶</span><small>射箭 <b id="touchArrowCount">24</b></small></button>
+              <button class="touch-rune" data-action="useRune" aria-label="释放符文"><span>✦</span><small>符文</small></button>
+              <button class="touch-sword" data-action="attack" data-repeat="340" aria-label="挥剑，长按连续攻击"><span>⚔</span><small>攻击</small></button>
+              <button class="touch-interact" data-action="interact" aria-label="交互、进入神庙或领取奖励"><span>◇</span><small>交互</small></button>
+              <button class="touch-jump" data-key="Space" aria-label="跳跃，空中再次点击滑翔"><span>↟</span><small>跳跃</small></button>
+            </div>
+          </div>
+          <p class="touch-hint">左手移动 · 右手行动 · 空中再点跳跃可滑翔</p>
+        </div>
       </div>
       <div class="controls-strip"><span><kbd>A</kbd><kbd>D</kbd> 移动</span><span><kbd>SPACE</kbd> 跳跃 / 滑翔</span><span><kbd>J</kbd> 攻击</span><span><kbd>K</kbd> 弓箭</span><span><kbd>E</kbd> 交互</span><span><kbd>F</kbd> 符文</span><button id="allControlsButton">全部操作 <svg><use href="#i-arrow"/></svg></button></div>
     </section>

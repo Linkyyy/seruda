@@ -1,0 +1,244 @@
+/* Touch layouts keep the world proportional and every action within thumb reach. */
+.mobile-bag-button { display: none; }
+.mobile-help { padding: 16px; margin-bottom: 18px; background: #e6edd9; border-radius: 4px; }
+.mobile-help h3 { font: 500 18px var(--serif); margin: 0 0 10px; }
+.mobile-help p { font-size: 12px; line-height: 1.95; color: #6a805c; margin: 8px 0 0; }
+
+.touch-device { -webkit-text-size-adjust: 100%; }
+.touch-device .app-header { padding-left: max(4%, env(safe-area-inset-left)); padding-right: max(4%, env(safe-area-inset-right)); }
+.touch-device .mobile-bag-button { display: inline-flex; }
+.touch-device .game-toolbar { min-height: 48px; height: 48px; padding: 0 10px; gap: 8px; flex-shrink: 0; }
+.touch-device .region-label { min-width: 0; flex: 1; font-size: 11px; gap: 7px; }
+.touch-device #regionLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.touch-device .region-tag, .touch-device .toolbar-divider, .touch-device .game-toolbar kbd { display: none; }
+.touch-device .game-toolbar-actions { gap: 2px; flex-shrink: 0; }
+.touch-device .game-toolbar .icon-button { width: 44px; height: 44px; min-width: 44px; }
+.touch-device .game-toolbar .icon-button svg, .touch-device .toolbar-button svg { width: 18px; height: 18px; }
+.touch-device .toolbar-button { min-width: 44px; min-height: 44px; font-size: 11px; padding: 8px; }
+.touch-device .stage-wrap {
+  --controls-height: 0px;
+  --scene-height: calc(100% - var(--controls-height));
+  position: relative;
+  height: clamp(320px, 55svh, 430px);
+  min-height: 0;
+  aspect-ratio: auto;
+  background: #19362b;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.touch-device.game-started .stage-wrap { --controls-height: 232px; height: calc(clamp(300px, 45svh, 420px) + 232px); }
+.touch-device .stage-wrap canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: var(--scene-height);
+  aspect-ratio: auto;
+  object-fit: contain;
+  touch-action: none;
+}
+.touch-device .stage-vignette { inset: 0 0 var(--controls-height); box-shadow: inset 0 0 40px #172b201c; }
+.touch-device .rune-hud { display: none; }
+.touch-device .game-hud { padding: 14px 16px; }
+.touch-device .heart { width: 17px; height: 16px; }
+.touch-device .stamina-track { width: 88px; height: 5px; }
+.touch-device .stamina-row { margin-top: 7px; }
+.touch-device .stamina-row svg { width: 14px; height: 14px; }
+.touch-device .hud-compass small { font-size: 9px; }
+.touch-device .interaction-prompt { bottom: calc(var(--controls-height) + 10px); top: auto; max-width: calc(100% - 32px); font-size: 11px; line-height: 1.6; white-space: normal; padding: 7px 10px; text-align: center; }
+.touch-device .interaction-prompt kbd { min-width: 26px; height: 20px; font-size: 9px; }
+.touch-device .toast-stack { top: 68px; right: 14px; max-width: min(280px, calc(100% - 28px)); gap: 6px; }
+.touch-device .toast { font-size: 11px; padding: 9px 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.touch-device .location-reveal { top: 17%; font-size: 27px; letter-spacing: 4px; }
+.touch-device .location-reveal small { font-size: 8px; letter-spacing: 2px; }
+.touch-device .pause-screen { padding: 20px; text-align: center; }
+.touch-device .pause-screen h2 { font-size: 25px; line-height: 1.6; }
+.touch-device .pause-screen .primary-button { min-height: 48px; font-size: 12px; }
+.touch-device .controls-strip > button { min-height: 32px; font-size: 11px; }
+.touch-device .controls-strip { padding: 4px 14px; }
+
+.touch-device .touch-controls {
+  --touch-size: clamp(44px, 12.3vw, 52px);
+  position: absolute;
+  inset: auto 0 0;
+  height: var(--controls-height);
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 10px;
+  padding: 14px max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left));
+  background: linear-gradient(145deg, #244637, #172f27);
+  border-top: 1px solid #bbcf9633;
+  z-index: 6;
+  pointer-events: none;
+}
+.touch-device.game-started .touch-controls { display: flex; }
+.touch-device .touch-controls button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1px;
+  width: var(--touch-size);
+  height: var(--touch-size);
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid #a8be8880;
+  background: #325741b8;
+  box-shadow: inset 0 1px #e0eac512, 0 3px #0e241b55;
+  color: #e8efd4;
+  font-size: 20px;
+  line-height: 1;
+  border-radius: 50%;
+  pointer-events: auto;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+.touch-device .touch-controls button span { line-height: 1.05; }
+.touch-device .touch-controls button small { font-size: 9px; line-height: 1.3; letter-spacing: .5px; font-weight: 400; }
+.touch-device .touch-controls button small b { font-weight: 400; font-size: 8px; }
+.touch-device .touch-controls button.pressed { background: #9bb878; color: #203b29; transform: translateY(2px) scale(.96); box-shadow: inset 0 2px 5px #16312344; }
+.touch-device .touch-controls button:disabled { opacity: .45; box-shadow: none; }
+.touch-device .touch-utility { display: flex; justify-content: center; align-items: center; gap: 10px; }
+.touch-device .touch-utility button { flex-direction: row; gap: 9px; width: 84px; height: 44px; border-radius: 7px; background: #34523b66; border-color: #adc58c44; }
+.touch-device .touch-utility button > span:first-child { font: 23px Georgia, serif; }
+.touch-device .touch-utility button > span:last-child { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.touch-device .touch-utility button b { font-size: 11px; font-weight: 500; letter-spacing: .5px; }
+.touch-device .touch-utility button small { font-size: 8px; color: #afc398; white-space: nowrap; letter-spacing: 0; }
+.touch-device .touch-utility .touch-rune-selector { width: 98px; }
+.touch-device .touch-main-controls { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.touch-device .touch-movement { flex-shrink: 0; }
+.touch-device .touch-climb { margin: 0 auto 6px; }
+.touch-device .touch-dpad { display: flex; align-items: center; gap: 4px; }
+.touch-device .touch-dpad button:nth-child(2) { margin-bottom: 0; }
+.touch-device .touch-sprint > span { font-size: 26px; line-height: .8; }
+.touch-device .touch-actions { display: grid; grid-template-columns: repeat(3, var(--touch-size)); grid-template-rows: repeat(2, var(--touch-size)); gap: 6px; flex-shrink: 0; }
+.touch-device .touch-interact { grid-column: 2; grid-row: 2; }
+.touch-device .touch-jump { grid-column: 3; grid-row: 2; background: #dbe5ba; border-color: #e7efc6; color: #28442e; }
+.touch-device .touch-sword { background: #65865a; border-color: #b7cc91; }
+.touch-device .touch-bow > span { font-size: 26px; }
+.touch-device .touch-hint { margin: 0; text-align: center; color: #94ac85; font-size: 9px; letter-spacing: .5px; line-height: 1.5; }
+
+html:has(body.play-mode), body.play-mode { overflow: hidden; overscroll-behavior: none; }
+.touch-device.play-mode { height: var(--app-height, 100dvh); min-height: 0; }
+.touch-device.play-mode .shell { height: 100%; padding: 0; }
+.touch-device.play-mode .app-header, .touch-device.play-mode .intro-row,
+.touch-device.play-mode .adventure-panels, .touch-device.play-mode .page-footer { display: none; }
+.touch-device.play-mode .game-card {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  width: 100%;
+  height: var(--app-height, 100dvh);
+  max-height: 100dvh;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  background: #183529;
+  box-shadow: none;
+}
+.touch-device.play-mode .game-toolbar {
+  height: auto;
+  min-height: calc(48px + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
+}
+.touch-device.play-mode .stage-wrap { flex: 1; height: auto !important; min-height: 0; --controls-height: calc(232px + env(safe-area-inset-bottom)); }
+.touch-device.play-mode:not(.game-started) .stage-wrap { --controls-height: 0px; }
+.touch-device.play-mode .touch-controls { padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+.touch-device.play-mode .controls-strip { display: none; }
+.touch-device .game-dialog { width: min(860px, calc(100% - 24px)); max-width: calc(100% - 24px); max-height: calc(var(--app-height, 100dvh) - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); padding: 18px 20px; overscroll-behavior: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+.touch-device .dialog-heading { position: sticky; top: -18px; z-index: 2; padding: 18px 0 16px; margin-top: -18px; background: #f5f6e9; }
+.touch-device .help-grid { display: none; }
+.touch-device .game-dialog .icon-button { width: 44px; height: 44px; min-width: 44px; }
+.touch-device .secondary-button { min-height: 44px; padding: 11px 14px; font-size: 12px; }
+.touch-device .rune-card { min-height: 90px; }
+.touch-device .rune-card strong { font-size: 11px; }
+.touch-device .rune-card small { font-size: 9px; }
+.touch-device .map-region { min-height: 116px; }
+.touch-device .map-region strong { font-size: 12px; }
+.touch-device .map-region small { font-size: 10px; }
+.touch-device .shrine-entry { min-height: 50px; }
+.touch-device .shrine-entry strong { font-size: 10px; }
+.touch-device .shrine-entry small { font-size: 9px; }
+.touch-device .bag-actions small { font-size: 11px; line-height: 1.6; }
+
+@media (max-width: 700px) {
+  .touch-device .shell { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
+  .touch-device .app-header { height: calc(72px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); }
+  .touch-device .header-actions .icon-button, .touch-device .header-actions .quiet-button { min-width: 44px; min-height: 44px; justify-content: center; }
+  .touch-device .intro-row { gap: 14px; padding: 25px 0 22px; }
+  .touch-device .intro-copy { min-width: 0; }
+  .touch-device .intro-description { font-size: 11px; line-height: 1.8; }
+  .touch-device .toolbar-text { display: none; }
+  .touch-device .game-card { border-radius: 7px; }
+  .touch-device .game-dialog { width: calc(100% - 24px); max-width: 100%; max-height: calc(var(--app-height, 100dvh) - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); padding: 16px; }
+  .touch-device .dialog-heading { position: sticky; top: -16px; z-index: 2; padding: 16px 0 14px; margin-top: -16px; background: #f5f6e9; }
+  .touch-device .dialog-heading h2 { font-size: 23px; letter-spacing: 2px; }
+  .touch-device .dialog-description { font-size: 12px; }
+  .touch-device .dialog-footer { font-size: 11px; }
+  .touch-device .bag-item strong { font-size: 12px; }
+  .touch-device .bag-item small { font-size: 11px; }
+  .touch-device .help-grid { display: none; }
+  .touch-device .guide-block p { font-size: 12px; }
+  .touch-device .panel-heading { min-height: 32px; }
+  .touch-device .panel-heading > button { min-height: 44px; font-size: 11px; }
+  .touch-device .inventory-slot { padding: 5px 0; }
+  .touch-device .inventory-slot small { font-size: 10px; }
+  .touch-device .page-footer { padding-bottom: max(22px, env(safe-area-inset-bottom)); }
+  .touch-device .page-footer button { min-height: 44px; font-size: 10px; }
+}
+
+@media (max-width: 360px) {
+  .touch-device .expedition-summary { display: none; }
+  .touch-device .intro-copy { flex: 1; }
+  .touch-device h1 { font-size: 25px; }
+  .touch-device #helpButton > span { display: none; }
+  .touch-device .header-actions { gap: 2px; }
+  .touch-device .touch-controls { --touch-size: 44px; padding-left: 10px; padding-right: 10px; }
+  .touch-device .touch-actions { gap: 4px; }
+  .touch-device .touch-utility { gap: 7px; }
+  .touch-device .touch-utility button { width: 80px; }
+  .touch-device .touch-utility .touch-rune-selector { width: 92px; }
+  .touch-device .game-dialog { width: calc(100% - 16px); padding: 12px; }
+  .touch-device .dialog-heading { top: -12px; margin-top: -12px; }
+  .touch-device .dialog-heading h2 { font-size: 21px; }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .touch-device.play-mode .stage-wrap { --controls-height: 0px; --scene-height: 100%; }
+  .touch-device.play-mode .touch-controls { inset: 0; height: auto; padding: 0; background: transparent; border: 0; display: block; }
+  .touch-device.play-mode .touch-main-controls { position: absolute; inset: 0; }
+  .touch-device.play-mode .touch-movement { position: absolute; left: max(12px, env(safe-area-inset-left)); bottom: max(12px, env(safe-area-inset-bottom)); }
+  .touch-device.play-mode .touch-actions { position: absolute; right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); }
+  .touch-device.play-mode .touch-utility { position: absolute; z-index: 1; bottom: max(12px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); gap: 6px; }
+  .touch-device.play-mode .touch-utility button { width: 70px; background: #234332d9; }
+  .touch-device.play-mode .touch-utility .touch-rune-selector { width: 92px; }
+  .touch-device.play-mode .touch-controls button { background-color: #254632ba; }
+  .touch-device.play-mode .touch-jump { background-color: #dbe5bacf; }
+  .touch-device.play-mode .touch-controls button.pressed { background-color: #9bb878; }
+  .touch-device.play-mode .touch-hint { display: none; }
+  .touch-device.play-mode .interaction-prompt { bottom: 134px; max-width: 52%; font-size: 10px; padding: 6px 10px; }
+  .touch-device.play-mode .game-hud { padding: 10px max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left)); }
+  .touch-device.play-mode .toast-stack { top: 53px; max-width: min(270px, 45%); }
+  .touch-device.play-mode .location-reveal { top: 16%; font-size: 25px; }
+  .touch-device .game-dialog { max-height: calc(var(--app-height, 100dvh) - 16px); }
+  .touch-device .world-map { grid-template-columns: repeat(5, 1fr); }
+  .touch-device .shrine-list { grid-template-columns: repeat(3, 1fr); }
+  .touch-device .boss-hud { top: 12px; }
+}
+
+@media (orientation: landscape) and (max-width: 600px) {
+  .touch-device.play-mode .touch-controls { --touch-size: 44px; }
+  .touch-device.play-mode .touch-utility button { width: 64px; }
+  .touch-device.play-mode .touch-utility .touch-rune-selector { width: 84px; }
+}
