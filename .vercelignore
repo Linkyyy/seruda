@@ -1,0 +1,7 @@
+.git
+node_modules
+dist
+tests
+CONTRACT.md
+.env
+.env.*

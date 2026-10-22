@@ -1,0 +1,15 @@
+{
+  "name": "windward-pixel-adventure",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "风野纪行 — an original GBA-style open-world side-scrolling adventure",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "build": "node scripts/build.mjs",
+    "preview": "node server.mjs --dist",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": { "node": ">=20" }
+}

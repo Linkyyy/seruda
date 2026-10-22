@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#172d25" />
+  <meta name="description" content="风野纪行：一场关于风、遗迹与自由的像素冒险。探索十片原野，解开十五座神庙，自由攀爬、滑翔、战斗与烹饪。" />
+  <title>风野纪行 WINDWARD — 像素旷野冒险</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231d382c'/%3E%3Cpath d='m16 4 4 9 8 3-8 3-4 9-4-9-8-3 8-3z' fill='%23d1dba9'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="i-wind" viewBox="0 0 24 24"><path d="M3 8h12a3 3 0 1 0-3-3M2 12h17a3 3 0 1 1-3 3M5 17h5a2 2 0 1 1-2 2"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2V5ZM9 3v16M15 5v16"/></symbol>
+    <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m16 8-2 6-6 2 2-6 6-2Z"/></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24"><path d="m11 4-6 5H2v6h3l6 5V4ZM16 8a6 6 0 0 1 0 8M19 5a10 10 0 0 1 0 14"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 5M12 17h.01"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l2 13H3L5 8ZM8 8V6a4 4 0 0 1 8 0v2M8 13h8"/></symbol>
+    <symbol id="i-shrine" viewBox="0 0 24 24"><path d="m12 2 7 9v10H5V11l7-9ZM9 21v-8h6v8M3 21h18M9 9h6"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M20 3C8 1 1 8 6 16s17 2 14-13ZM4 21 16 8M9 16v-6M9 16h6"/></symbol>
+    <symbol id="i-cross" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1 1M18 18l1 1M5 19l1-1M18 6l1-1"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="m4 4 12 0 4 4v12H4V4ZM8 4v6h8V4M8 20v-6h8v6"/></symbol>
+  </defs></svg>
+
+  <header class="app-header">
+    <a class="brand" href="/" aria-label="风野纪行首页"><span class="brand-emblem">✦</span><span class="brand-type">WINDWARD<span>风 野 纪 行</span></span></a>
+    <div class="header-divider"></div><span class="header-note">A LITTLE WORLD.<br>A GRAND ADVENTURE.</span>
+    <nav class="header-actions" aria-label="游戏设置">
+      <span class="save-status" id="saveStatus"><i></i> 冒险自动保存</span>
+      <button class="icon-button" id="audioButton" aria-label="开启声音" title="声音"><svg><use href="#i-volume"/></svg><span class="audio-slash"></span></button>
+      <button class="quiet-button" id="helpButton"><svg><use href="#i-help"/></svg><span>冒险指南</span></button>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <section class="intro-row">
+      <div class="intro-copy"><p class="eyebrow"><span class="tiny-star">✧</span> AN OPEN-WORLD PIXEL ADVENTURE <span class="edition">VOL. 01</span></p><h1>让风，带你去远方。<svg><use href="#i-leaf"/></svg></h1><p class="intro-description">越过山丘，点亮古老的神庙。每一条路，都是你的故事。</p></div>
+      <div class="expedition-summary"><div><span class="summary-label">旷野探索</span><strong><b id="regionCount">01</b><span> / 10</span></strong><span class="summary-caption">片风景，等你发现</span></div><svg><use href="#i-compass"/></svg></div>
+    </section>
+
+    <section class="game-card" aria-label="风野纪行游戏">
+      <div class="game-toolbar"><div class="region-label"><span class="region-dot"></span><span id="regionLabel">晨风原野</span><span class="region-tag" id="regionTag">THE ADVENTURE BEGINS</span></div><div class="game-toolbar-actions"><button id="mapButton" class="toolbar-button"><svg><use href="#i-map"/></svg>世界地图 <kbd>M</kbd></button><span class="toolbar-divider"></span><button class="icon-button" id="pauseButton" title="暂停游戏" aria-label="暂停游戏"><svg><use href="#i-pause"/></svg></button><button class="icon-button" id="fullscreenButton" title="全屏游戏" aria-label="全屏游戏"><svg><use href="#i-expand"/></svg></button></div></div>
+      <div class="stage-wrap" id="gameStage">
+        <canvas id="gameCanvas" width="960" height="540" tabindex="0" aria-label="像素横版开放世界，使用方向键移动，空格跳跃，J攻击，E交互"></canvas>
+        <div class="stage-vignette"></div>
+        <div class="game-hud" id="gameHud"><div class="vitals"><div class="hearts" id="hearts" aria-label="生命值"></div><div class="stamina-row"><svg><use href="#i-wind"/></svg><div class="stamina-track"><i id="staminaBar"></i></div></div></div><div class="hud-compass"><span>N</span><div>╱<b>✦</b>╱</div><small><svg><use href="#i-sun"/></svg><span id="weatherLabel">晴 · 06:00</span></small></div></div>
+        <div class="boss-hud hidden" id="bossHud"><span>遗迹守望者</span><div><i id="bossHealth"></i></div><small id="bossHealthText"></small></div>
+        <div class="start-screen" id="startScreen"><div class="start-copy"><span class="start-eyebrow">— THE WIND IS CALLING —</span><h2>故事，始于<br>一阵自由的风。</h2><p>带上勇气，向未知出发。</p><button class="primary-button" id="startButton">踏入旷野 <svg><use href="#i-arrow"/></svg></button><span class="start-footnote">10 片原野 <i>·</i> 15 座神庙 <i>·</i> 无限种可能</span></div><div class="start-stamp"><svg><use href="#i-compass"/></svg><span>GO WHERE<br>YOU FEEL ALIVE</span></div></div>
+        <div class="interaction-prompt hidden" id="interactionPrompt"><kbd>E</kbd><span></span></div>
+        <div class="rune-hud" id="runeHud"><span class="rune-symbol" id="runeSymbol">≋</span><div><small>古代符文</small><b id="runeName">风之力</b></div><kbd>F</kbd></div>
+        <div class="location-reveal" id="locationReveal"></div>
+        <div class="pause-screen hidden" id="pauseScreen"><span class="eyebrow">TAKE A BREATH</span><h2>让风，歇一会儿。</h2><p>你的冒险已自动保存。</p><button class="primary-button" id="resumeButton">继续冒险 <svg><use href="#i-arrow"/></svg></button></div>
+        <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+        <div class="touch-controls" id="touchControls"><div class="touch-dpad"><button data-key="ArrowLeft" aria-label="向左">◀</button><button data-key="ArrowUp" aria-label="攀爬">▲</button><button data-key="ArrowRight" aria-label="向右">▶</button></div><div class="touch-actions"><button data-action="attack">剑</button><button data-action="useRune">符</button><button data-action="interact">E</button><button data-key="Space">跳</button></div></div>
+      </div>
+      <div class="controls-strip"><span><kbd>A</kbd><kbd>D</kbd> 移动</span><span><kbd>SPACE</kbd> 跳跃 / 滑翔</span><span><kbd>J</kbd> 攻击</span><span><kbd>K</kbd> 弓箭</span><span><kbd>E</kbd> 交互</span><span><kbd>F</kbd> 符文</span><button id="allControlsButton">全部操作 <svg><use href="#i-arrow"/></svg></button></div>
+    </section>
+
+    <section class="adventure-panels">
+      <article class="journal-panel quest-panel"><div class="panel-heading"><span><svg><use href="#i-compass"/></svg>冒险手记</span><small>YOUR NEXT CHAPTER</small></div><div class="quest-content"><span class="quest-diamond">◇</span><div><h3 id="questTitle">唤醒沉睡的旷野</h3><p id="questText">循着青色的光，寻找第一座古代神庙。</p><div class="quest-progress"><i id="questProgress"></i></div><span class="quest-progress-label"><b id="shrineCount">0</b> / 15 座神庙已点亮</span></div></div></article>
+      <article class="journal-panel inventory-panel"><div class="panel-heading"><span><svg><use href="#i-bag"/></svg>旅人的行囊</span><button id="bagButton">查看全部 <span>↗</span></button></div><div class="quick-inventory"><button class="inventory-slot" id="swordSlot" title="旅人长剑 · J攻击"><span class="pixel-icon sword-icon">⚔</span><span>旅人长剑</span><small>J · 装备中</small></button><button class="inventory-slot" id="bowSlot" title="木制弓 · K射击"><span class="pixel-icon bow-icon">➶</span><span>木制弓</span><small><b id="arrowCount">20</b> 支箭</small></button><button class="inventory-slot" id="foodSlot" title="使用料理恢复生命 · Q"><span class="pixel-icon food-icon">♨</span><span>野炊料理</span><small>× <b id="foodCount">2</b><span class="slot-action">食用</span></small></button><button class="inventory-slot" id="orbSlot" title="神庙试炼获得灵珠"><span class="pixel-icon orb-icon">✧</span><span>风之灵珠</span><small>× <b id="orbCount">0</b></small></button></div></article>
+      <article class="journal-panel field-panel"><span class="field-no">FIELD NOTES / 001</span><svg class="field-leaf"><use href="#i-leaf"/></svg><h3>不必急着抵达。</h3><p id="fieldTip">爬上高处，撑开滑翔伞。<br>有时候，绕远的路风景更好。</p><span class="field-bottom">愿你的每一步，都有风相伴。 <span>✦</span></span></article>
+    </section>
+    <footer class="page-footer"><span>WINDWARD <i>©</i> 2026 <span>·</span> 一场原创像素冒险</span><span class="footer-note"><span class="tiny-star">✧</span> MADE FOR THE WANDERER IN YOU</span><button id="resetButton">重新开始</button></footer>
+  </main>
+
+  <dialog id="gameDialog" class="game-dialog"><div class="dialog-heading"><div><span class="eyebrow" id="dialogEyebrow">EXPLORER'S JOURNAL</span><h2 id="dialogTitle">世界地图</h2></div><button class="icon-button" id="closeDialog" aria-label="关闭窗口"><svg><use href="#i-cross"/></svg></button></div><div id="dialogContent"></div></dialog>
+  <noscript><div class="noscript">请开启 JavaScript 来探索风野纪行。</div></noscript>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

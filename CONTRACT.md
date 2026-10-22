@@ -1,0 +1,31 @@
+# Wilds of the Wind — implementation contract
+
+Original browser canvas pixel side-scrolling adventure. Native ES modules, no runtime dependencies. World pixels: viewport 960×540, ground baseline y=440; player w=18,h=30. Maps width >=2400, height=540. Main app owns external DOM, game owns simulation.
+
+## Files / ownership
+- `src/world.js`: content agent. Exports `MAPS`, `SHRINES`, `createMap(id)`, `createShrine(id)`, `validateWorld()`. Pure data/factory, no DOM. Map IDs `map-01`..`map-10`; shrine IDs `shrine-01`..`shrine-15`.
+- `src/game.js`: engine agent. Imports world and Renderer. Exports `Game`. Constructor `new Game(canvas, {onUpdate(snapshot), onEvent(event)})`; methods `start()`, `pause(bool)`, `togglePause()`, `interact()`, `attack()`, `shoot()`, `useRune()`, `cycleRune()`, `eat()`, `cook()`, `travel(mapId)`, `reset()`, `save()`, `setInput(key, pressed)`, `getSnapshot()`. Owns RAF and keyboard except M, Tab, Escape, I, H (UI). `game.started` starts false, render still runs. Exposes `game.state`, `game.map`, `game.camera`, `game.player`, `game.effects`, `game.projectiles`, `game.enemies`, `game.items`, `game.keys`, `game.time`. Gracefully optional Renderer `render(game)`.
+- `src/render.js`: renderer agent. Exports `Renderer`; `constructor(canvas)` and `render(game)`. It must use schema below and tolerate absent/extra fields. Canvas internal size 960×540, drawing no external image assets, polished GBA pixel art. Renderer accesses all geometry in world coordinates minus game.camera.x; decorative background parallax. No game state mutation.
+- `src/audio.js`: audio/effects agent. Exports `AudioManager`, methods `unlock()`, `setEnabled(bool)`, `play(type)`, `destroy()`. All playback optional and safe, no remote assets. Also contributes `README.md` explaining actual gameplay/features/controls after reading engine.
+- `index.html`, `styles.css`, `src/main.js`, `package.json`, `server.mjs`, `tests/*`: root owns shell/UI, integration and validation.
+
+## Content schema
+MAPS: array of 10 metadata maps. Each `{id,index,name,subtitle,description,biome,width:3200,height:540,groundY:440,palette:{sky,skyBottom,mountain,far,mid,grass,dirt,accent},weather:'clear'|'rain'|'snow'|'sand',spawn:{x:100,y:390},platforms:[{x,y,w,h,kind:'ground'|'stone'|'wood'|'ice'}],enemies:[{id,type:'slime'|'bokoblin'|'bat'|'guardian',x,y,hp,patrol:120}],items:[{id,type:'apple'|'wood'|'ore'|'rupee'|'chest'|'heart'|'arrow',x,y}],shrines:[{id:'shrine-01',x,y:440}],objects:[{id,type:'tree'|'rock'|'campfire'|'sign'|'tower'|'water'|'grass'|'crate'|'wind'|'switch'|'gate'|'metal'|'ice'|'torch',x,y,w,h,text?,active?,target?}],exits:{left:previousMapId|null,right:nextMapId|null}}`. platforms must include walkable ground split as desired; floor rectangles y=440 h=100. x,y of objects are TOP LEFT; shrine entrances x,y use y=ground floor baseline. Enemy y denotes top-left.
+
+SHRINES metadata array of 15 `{id,index,name,mapId,puzzle:'wind'|'magnet'|'stasis'|'bomb'|'flame',hint,description,rune:'wind'|'magnet'|'stasis'|'bomb'|'flame'}`. Rune names fixed. `createShrine(id)` returns world-level object same general map shape (`id` is shrine id, name, biome:'shrine', width:1600,height:540,groundY:440,palette,spawn,platforms,enemies,items,objects,shrines:[],exits:{left:null,right:null},puzzle:{type,solved:false,hint},altar:{x:1450,y:380,w:40,h:60}}`. Include meaningful geometry/objects fitting puzzle. Engine interprets gate/switch/etc and makes puzzle solvable with matching rune. Provide safe floor at x0..500 and x1100..1600, puzzle traversal gap optional.
+
+Factories return deep mutable copies; shared metadata remains unchanged. `validateWorld()` returns array of errors (empty on success).
+
+## Engine runtime state
+`game.state={mapId,shrineId:null|id,visited:[mapIds],completedShrines:[ids],inventory:{apple:3,wood:0,ore:0,food:2},rune:'wind',questStage:0,paused:false,started:false,weather,...}`. State optionally includes player for storage.
+`game.player={x,y,w:18,h:30,vx,vy,facing:1,onGround,hp:6,maxHp:6,stamina:100,maxStamina:100,arrows:20,rupees:0,orbs:0,gliding:false,climbing:false,attackTimer:0,invuln:0}`.
+Runtime enemies cloned map.enemies and extended `{w,h,vx,alive,hp,maxHp,hurtTimer,attackTimer}`. Runtime items cloned map.items plus `{collected:false}`. Effects `{type,x,y,life,maxLife,color?,text?,radius?}`. Projectiles `{type:'arrow'|'bomb'|'enemy',x,y,vx,vy,life,w?,h?}`.
+`game.camera={x:0,y:0}`; `game.time` seconds; `game.map` active mutable map.
+`getSnapshot()` returns `{started,paused,mapId,mapName,mapSubtitle,biome,shrineId,shrineName,weather,hp,maxHp,stamina,maxStamina,arrows,rupees,orbs,inventory,rune,visited,completedShrines,quest,interaction,canCook,gameWon,playTime}`. `interaction` text or empty. `quest` string. onUpdate at most every ~100ms.
+`onEvent({type,text?,kind?,...})`: type='toast' {text,kind:'success'|'info'|'warning'}, type='sound' {name}, type='shrineComplete' {id}, type='death', type='victory'.
+
+## Input and gameplay
+A/D or arrows move, Space jump (double press while airborne deploys glider), W/up climb near wall/tree, Shift sprint, J melee, K bow, E interact, F rune, R cycle, C cook (near campfire), Q eat food. UI M map, I bag, H help, Escape pause. Avoid intercepting typing in input. Mobile setInput('ArrowLeft' etc) and action methods. Rune interacts with nearby shrine puzzle object; its correct use plus exploration should allow reaching/activating altar. E at entrance enters; E at altar awards orb once and returns overworld; E near shrine entrance inside exits. 4 orbs upgrade health; all 15 unlock ending/victory encounter in map-10. Death respawns, keeps progression. Travel to visited maps only except map-01 initially. Save localStorage namespace 'wilds-of-the-wind-v1', resume reload, preserve progress, reset only via explicit UI.
+
+## Quality
+No remote assets/fonts required; all visuals procedural pixel drawings, CSS system fonts. Original IP only; no copied Nintendo names, assets, or maps. Chinese UI, tasteful small English labels. Use no random unpredictable simulation in validation; map generation deterministic. Every region and shrine should be individually authored and named, not empty placeholder numbers. All 15 shrine puzzles completable. Expose `window.__game` only for local smoke checks. No changes outside own files except agreed communications.
